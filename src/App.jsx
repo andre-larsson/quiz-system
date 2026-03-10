@@ -15,7 +15,7 @@ function App() {
     const loadQuiz = async () => {
       try {
         const response = await fetch(DEFAULT_QUIZ)
-        if (!response.ok) throw new Error('Kunde inte läsa quizfilen')
+        if (!response.ok) throw new Error('Could not read quiz file')
         const data = await response.json()
         validateQuiz(data)
         setQuiz(data)
@@ -37,7 +37,7 @@ function App() {
   }
 
   if (!quiz) {
-    return <main className="container"><p>Laddar quiz…</p></main>
+    return <main className="container"><p>Loading quiz…</p></main>
   }
 
   const isFinished = currentIndex >= quiz.questions.length
@@ -47,7 +47,7 @@ function App() {
       <main className="container">
         <section className="card">
           <h1>{quiz.title}</h1>
-          <p className="subtitle">Klart! Du fick {score} / {quiz.questions.length} rätt.</p>
+          <p className="subtitle">Done! You got {score} / {quiz.questions.length} correct.</p>
           <button
             className="primary-btn"
             onClick={() => {
@@ -57,7 +57,7 @@ function App() {
               setScore(0)
             }}
           >
-            Kör igen
+            Restart
           </button>
         </section>
       </main>
@@ -65,7 +65,7 @@ function App() {
   }
 
   if (!currentQuestion) {
-    return <main className="container"><p className="error">Kunde inte läsa aktuell fråga.</p></main>
+    return <main className="container"><p className="error">Could not read current question.</p></main>
   }
 
   const progress = `${currentIndex + 1} / ${quiz.questions.length}`
@@ -88,11 +88,11 @@ function App() {
   return (
     <main className="container">
       <section className="card">
-        <p className="meta">{quiz.title} • Fråga {progress}</p>
+        <p className="meta">{quiz.title} • Question {progress}</p>
         <h1>{currentQuestion.question}</h1>
 
         {currentQuestion.image && (
-          <img className="question-image" src={currentQuestion.image} alt="Frågebild" />
+          <img className="question-image" src={currentQuestion.image} alt="Question illustration" />
         )}
 
         <div className="options">
@@ -119,7 +119,7 @@ function App() {
 
         {isLocked && (
           <button className="primary-btn" onClick={nextQuestion}>
-            {currentIndex + 1 < quiz.questions.length ? 'Nästa fråga' : 'Visa resultat'}
+            {currentIndex + 1 < quiz.questions.length ? 'Next question' : 'Show results'}
           </button>
         )}
       </section>
@@ -129,16 +129,16 @@ function App() {
 
 function validateQuiz(quiz) {
   if (!quiz?.title || !Array.isArray(quiz.questions) || quiz.questions.length === 0) {
-    throw new Error('Ogiltig quizfil: saknar title eller questions')
+    throw new Error('Invalid quiz file: missing title or questions')
   }
 
   quiz.questions.forEach((question, idx) => {
     if (!question.id || !question.question) {
-      throw new Error(`Fråga ${idx + 1}: saknar id eller question`)
+      throw new Error(`Question ${idx + 1}: missing id or question`)
     }
 
     if (!Array.isArray(question.options) || question.options.length < 2) {
-      throw new Error(`Fråga ${idx + 1}: options måste ha minst 2 svarsalternativ`)
+      throw new Error(`Question ${idx + 1}: options must contain at least 2 answers`)
     }
 
     if (
@@ -146,7 +146,7 @@ function validateQuiz(quiz) {
       question.correctIndex < 0 ||
       question.correctIndex >= question.options.length
     ) {
-      throw new Error(`Fråga ${idx + 1}: correctIndex är utanför options`) 
+      throw new Error(`Question ${idx + 1}: correctIndex is out of range`) 
     }
   })
 }

@@ -1,23 +1,23 @@
 {
-  "title": "Intervallquiz (Svenska)",
+  "title": "Interval Quiz (English)",
   "version": 1,
   "questions": [
     {
       "id": "q1",
-      "question": "Hur många halvtoner är en ren kvint?",
+      "question": "How many semitones are in a perfect fifth?",
       "options": ["5", "6", "7", "8"],
       "correctIndex": 2
     },
     {
       "id": "q2",
-      "question": "Vilket intervall är 4 halvtoner?",
-      "options": ["Liten ters", "Stor ters", "Ren kvart", "Liten sext"],
+      "question": "Which interval is 4 semitones?",
+      "options": ["Minor third", "Major third", "Perfect fourth", "Minor sixth"],
       "correctIndex": 1
     },
     {
       "id": "q3",
-      "question": "Vilket intervall är 12 halvtoner?",
-      "options": ["Liten septima", "Stor sext", "Oktav", "Tritonus"],
+      "question": "Which interval is 12 semitones?",
+      "options": ["Minor seventh", "Major sixth", "Octave", "Tritone"],
       "correctIndex": 2
     }
   ]
