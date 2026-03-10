@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 
-const DEFAULT_QUIZ = '/quizzes/intervaller-sv.json'
+const DEFAULT_QUIZ = `${import.meta.env.BASE_URL}quizzes/intervaller-sv.json`
 
 function App() {
   const [quiz, setQuiz] = useState(null)
@@ -29,14 +29,14 @@ function App() {
 
   const currentQuestion = useMemo(() => {
     if (!quiz) return null
-    return quiz.questions[currentIndex]
+    return quiz.questions[currentIndex] ?? null
   }, [quiz, currentIndex])
 
   if (error) {
     return <main className="container"><p className="error">{error}</p></main>
   }
 
-  if (!quiz || !currentQuestion) {
+  if (!quiz) {
     return <main className="container"><p>Laddar quiz…</p></main>
   }
 
@@ -62,6 +62,10 @@ function App() {
         </section>
       </main>
     )
+  }
+
+  if (!currentQuestion) {
+    return <main className="container"><p className="error">Kunde inte läsa aktuell fråga.</p></main>
   }
 
   const progress = `${currentIndex + 1} / ${quiz.questions.length}`
