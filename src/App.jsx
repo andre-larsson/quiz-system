@@ -1,129 +1,304 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import './App.css'
 
-const DEFAULT_QUIZ = `${import.meta.env.BASE_URL}quizzes/intervaller-sv.json`
+const QUIZ_FILES = [
+  { id: 'intervals', name: 'Interval Quiz', file: 'intervaller-sv.json', description: 'Test interval basics and semitone recognition.' },
+  { id: 'chords', name: 'Chord Quiz', file: 'chords-en.json', description: 'Practice chord quality, symbols, and interval structure.' }
+]
+
+const DEFAULT_SETTINGS = {
+  shuffleQuestions: false,
+  randomizeOptions: false,
+  showImmediateFeedback: true
+}
 
 function App() {
+  const [screen, setScreen] = useState('menu')
   const [quiz, setQuiz] = useState(null)
+  const [questions, setQuestions] = useState([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedIndex, setSelectedIndex] = useState(null)
   const [isLocked, setIsLocked] = useState(false)
   const [score, setScore] = useState(0)
   const [error, setError] = useState('')
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS)
 
-  useEffect(() => {
-    const loadQuiz = async () => {
-      try {
-        const response = await fetch(DEFAULT_QUIZ)
-        if (!response.ok) throw new Error('Could not read quiz file')
-        const data = await response.json()
-        validateQuiz(data)
-        setQuiz(data)
-      } catch (err) {
-        setError(err.message)
-      }
+  const currentQuestion = useMemo(() => questions[currentIndex] ?? null, [questions, currentIndex])
+
+  const startQuiz = async (quizMeta) => {
+    try {
+      setError('')
+      const url = `${import.meta.env.BASE_URL}quizzes/${quizMeta.file}`
+      const response = await fetch(url)
+      if (!response.ok) throw new Error('Could not read quiz file')
+
+      const data = await response.json()
+      validateQuiz(data)
+
+      let prepared = data.questions.map((q) => ({ ...q }))
+      if (settings.shuffleQuestions) prepared = shuffle(prepared)
+      if (settings.randomizeOptions) prepared = prepared.map((q) => randomizeQuestionOptions(q))
+
+      setQuiz({ ...data, file: quizMeta.file })
+      setQuestions(prepared)
+      setCurrentIndex(0)
+      setSelectedIndex(null)
+      setIsLocked(false)
+      setScore(0)
+      setScreen('play')
+    } catch (err) {
+      setError(err.message)
+      setScreen('menu')
     }
-
-    loadQuiz()
-  }, [])
-
-  const currentQuestion = useMemo(() => {
-    if (!quiz) return null
-    return quiz.questions[currentIndex] ?? null
-  }, [quiz, currentIndex])
-
-  if (error) {
-    return <main className="container"><p className="error">{error}</p></main>
   }
-
-  if (!quiz) {
-    return <main className="container"><p>Loading quiz…</p></main>
-  }
-
-  const isFinished = currentIndex >= quiz.questions.length
-
-  if (isFinished) {
-    return (
-      <main className="container">
-        <section className="card">
-          <h1>{quiz.title}</h1>
-          <p className="subtitle">Done! You got {score} / {quiz.questions.length} correct.</p>
-          <button
-            className="primary-btn"
-            onClick={() => {
-              setCurrentIndex(0)
-              setSelectedIndex(null)
-              setIsLocked(false)
-              setScore(0)
-            }}
-          >
-            Restart
-          </button>
-        </section>
-      </main>
-    )
-  }
-
-  if (!currentQuestion) {
-    return <main className="container"><p className="error">Could not read current question.</p></main>
-  }
-
-  const progress = `${currentIndex + 1} / ${quiz.questions.length}`
 
   const lockAnswer = (optionIndex) => {
-    if (isLocked) return
+    if (isLocked || !currentQuestion) return
     setSelectedIndex(optionIndex)
     setIsLocked(true)
     if (optionIndex === currentQuestion.correctIndex) {
       setScore((prev) => prev + 1)
     }
+
+    if (!settings.showImmediateFeedback) {
+      setTimeout(() => {
+        goToNextQuestion()
+      }, 280)
+    }
   }
 
-  const nextQuestion = () => {
-    setCurrentIndex((prev) => prev + 1)
+  const goToNextQuestion = () => {
+    if (!quiz) return
+
+    const nextIndex = currentIndex + 1
+    if (nextIndex >= questions.length) {
+      setScreen('results')
+      return
+    }
+
+    setCurrentIndex(nextIndex)
     setSelectedIndex(null)
     setIsLocked(false)
   }
 
+  const restartCurrentQuiz = () => {
+    if (!quiz) return
+    startQuiz({ file: quiz.file || QUIZ_FILES[0].file })
+  }
+
   return (
     <main className="container">
-      <section className="card">
-        <p className="meta">{quiz.title} • Question {progress}</p>
-        <h1>{currentQuestion.question}</h1>
+      <section className="card arcade">
+        <header className="topbar">
+          <h1>🎮 Quiz System</h1>
+          <p>Game-like, modular, and file-driven quizzes.</p>
+        </header>
 
-        {currentQuestion.image && (
-          <img className="question-image" src={currentQuestion.image} alt="Question illustration" />
+        {error && <p className="error">{error}</p>}
+
+        {screen === 'menu' && (
+          <MenuView
+            settings={settings}
+            onChangeSettings={setSettings}
+            onStart={startQuiz}
+            onOpenHelp={() => setScreen('help')}
+            onOpenFormat={() => setScreen('format')}
+          />
         )}
 
-        <div className="options">
-          {currentQuestion.options.map((option, index) => {
-            const isCorrect = index === currentQuestion.correctIndex
-            const isSelected = index === selectedIndex
-
-            let className = 'option-btn'
-            if (isLocked && isCorrect) className += ' correct'
-            if (isLocked && isSelected && !isCorrect) className += ' wrong'
-
-            return (
-              <button
-                key={`${currentQuestion.id}-${index}`}
-                className={className}
-                onClick={() => lockAnswer(index)}
-                disabled={isLocked}
-              >
-                {option}
-              </button>
-            )
-          })}
-        </div>
-
-        {isLocked && (
-          <button className="primary-btn" onClick={nextQuestion}>
-            {currentIndex + 1 < quiz.questions.length ? 'Next question' : 'Show results'}
-          </button>
+        {screen === 'play' && quiz && currentQuestion && (
+          <PlayView
+            quiz={quiz}
+            questions={questions}
+            currentQuestion={currentQuestion}
+            currentIndex={currentIndex}
+            selectedIndex={selectedIndex}
+            isLocked={isLocked}
+            score={score}
+            showImmediateFeedback={settings.showImmediateFeedback}
+            onSelectAnswer={lockAnswer}
+            onNext={goToNextQuestion}
+            onExit={() => setScreen('menu')}
+          />
         )}
+
+        {screen === 'results' && quiz && (
+          <ResultsView
+            quiz={quiz}
+            score={score}
+            total={questions.length}
+            onPlayAgain={restartCurrentQuiz}
+            onBackToMenu={() => setScreen('menu')}
+          />
+        )}
+
+        {screen === 'help' && <HelpView onBack={() => setScreen('menu')} />}
+        {screen === 'format' && <FormatView onBack={() => setScreen('menu')} />}
       </section>
     </main>
+  )
+}
+
+function MenuView({ settings, onChangeSettings, onStart, onOpenHelp, onOpenFormat }) {
+  return (
+    <div className="menu-grid">
+      <section className="panel">
+        <h2>Start Menu</h2>
+        <p className="muted">Choose a quiz and launch a round.</p>
+        <div className="quiz-list">
+          {QUIZ_FILES.map((q) => (
+            <button key={q.id} className="quiz-card" onClick={() => onStart(q)}>
+              <strong>{q.name}</strong>
+              <span>{q.description}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="panel">
+        <h2>Settings</h2>
+        <label className="toggle">
+          <input
+            type="checkbox"
+            checked={settings.shuffleQuestions}
+            onChange={(e) => onChangeSettings((s) => ({ ...s, shuffleQuestions: e.target.checked }))}
+          />
+          Shuffle question order
+        </label>
+        <label className="toggle">
+          <input
+            type="checkbox"
+            checked={settings.randomizeOptions}
+            onChange={(e) => onChangeSettings((s) => ({ ...s, randomizeOptions: e.target.checked }))}
+          />
+          Randomize answer options
+        </label>
+        <label className="toggle">
+          <input
+            type="checkbox"
+            checked={settings.showImmediateFeedback}
+            onChange={(e) => onChangeSettings((s) => ({ ...s, showImmediateFeedback: e.target.checked }))}
+          />
+          Show immediate right/wrong colors
+        </label>
+      </section>
+
+      <section className="panel">
+        <h2>Help & Info</h2>
+        <div className="menu-actions">
+          <button className="ghost-btn" onClick={onOpenHelp}>Help</button>
+          <button className="ghost-btn" onClick={onOpenFormat}>Quiz format spec</button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function PlayView({
+  quiz,
+  questions,
+  currentQuestion,
+  currentIndex,
+  selectedIndex,
+  isLocked,
+  score,
+  showImmediateFeedback,
+  onSelectAnswer,
+  onNext,
+  onExit
+}) {
+  return (
+    <>
+      <p className="meta">{quiz.title} • Question {currentIndex + 1} / {questions.length} • Score {score}</p>
+      <h2>{currentQuestion.question}</h2>
+
+      {currentQuestion.image && (
+        <img className="question-image" src={currentQuestion.image} alt="Question illustration" />
+      )}
+
+      <div className="options">
+        {currentQuestion.options.map((option, index) => {
+          const isCorrect = index === currentQuestion.correctIndex
+          const isSelected = index === selectedIndex
+
+          let className = 'option-btn'
+          if (showImmediateFeedback && isLocked && isCorrect) className += ' correct'
+          if (showImmediateFeedback && isLocked && isSelected && !isCorrect) className += ' wrong'
+
+          return (
+            <button
+              key={`${currentQuestion.id}-${index}`}
+              className={className}
+              onClick={() => onSelectAnswer(index)}
+              disabled={isLocked}
+            >
+              {option}
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="row">
+        <button className="ghost-btn" onClick={onExit}>Back to menu</button>
+        {showImmediateFeedback && isLocked && (
+          <button className="primary-btn" onClick={onNext}>
+            {currentIndex + 1 < questions.length ? 'Next question' : 'Show results'}
+          </button>
+        )}
+      </div>
+    </>
+  )
+}
+
+function ResultsView({ quiz, score, total, onPlayAgain, onBackToMenu }) {
+  const pct = Math.round((score / total) * 100)
+  return (
+    <div className="panel">
+      <h2>{quiz.title} — Results</h2>
+      <p className="subtitle">You scored {score} / {total} ({pct}%).</p>
+      <div className="menu-actions">
+        <button className="primary-btn" onClick={onPlayAgain}>Play again</button>
+        <button className="ghost-btn" onClick={onBackToMenu}>Back to menu</button>
+      </div>
+    </div>
+  )
+}
+
+function HelpView({ onBack }) {
+  return (
+    <section className="panel prose">
+      <h2>Help</h2>
+      <ul>
+        <li>Pick a quiz from the Start Menu.</li>
+        <li>Use Settings to shuffle questions/options.</li>
+        <li>Enable or disable immediate feedback coloring.</li>
+        <li>Each quiz is loaded from a JSON file in <code>public/quizzes/</code>.</li>
+      </ul>
+      <button className="ghost-btn" onClick={onBack}>Back</button>
+    </section>
+  )
+}
+
+function FormatView({ onBack }) {
+  return (
+    <section className="panel prose">
+      <h2>Quiz format</h2>
+      <p>Each quiz file is a plain JSON document:</p>
+      <pre>{`{
+  "title": "Quiz title",
+  "version": 1,
+  "questions": [
+    {
+      "id": "q1",
+      "question": "Your question text",
+      "options": ["A", "B", "C", "D"],
+      "correctIndex": 1,
+      "image": "/images/example.png"
+    }
+  ]
+}`}</pre>
+      <button className="ghost-btn" onClick={onBack}>Back</button>
+    </section>
   )
 }
 
@@ -146,9 +321,28 @@ function validateQuiz(quiz) {
       question.correctIndex < 0 ||
       question.correctIndex >= question.options.length
     ) {
-      throw new Error(`Question ${idx + 1}: correctIndex is out of range`) 
+      throw new Error(`Question ${idx + 1}: correctIndex is out of range`)
     }
   })
+}
+
+function shuffle(arr) {
+  const next = [...arr]
+  for (let i = next.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[next[i], next[j]] = [next[j], next[i]]
+  }
+  return next
+}
+
+function randomizeQuestionOptions(question) {
+  const indexed = question.options.map((text, idx) => ({ text, idx }))
+  const shuffled = shuffle(indexed)
+  return {
+    ...question,
+    options: shuffled.map((x) => x.text),
+    correctIndex: shuffled.findIndex((x) => x.idx === question.correctIndex)
+  }
 }
 
 export default App

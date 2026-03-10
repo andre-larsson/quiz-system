@@ -5,8 +5,8 @@
   padding: 2rem;
 }
 
-.card {
-  width: min(760px, 100%);
+.arcade {
+  width: min(920px, 100%);
   background: linear-gradient(160deg, rgba(15, 20, 35, 0.95), rgba(10, 14, 26, 0.96));
   border: 1px solid rgba(135, 164, 255, 0.25);
   border-radius: 18px;
@@ -14,20 +14,45 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
 }
 
-.meta {
-  margin: 0;
-  color: rgba(220, 230, 255, 0.75);
-  font-size: 0.95rem;
+.topbar h1 { margin: 0; }
+.topbar p { margin: 0.25rem 0 1rem; color: rgba(220, 230, 255, 0.78); }
+
+.menu-grid {
+  display: grid;
+  gap: 1rem;
 }
 
-.subtitle {
-  color: rgba(220, 230, 255, 0.82);
+.panel {
+  border: 1px solid rgba(146, 172, 255, 0.2);
+  background: linear-gradient(140deg, rgba(26, 35, 66, 0.55), rgba(14, 20, 38, 0.6));
+  border-radius: 12px;
+  padding: 1rem;
 }
 
-h1 {
-  margin: 0.5rem 0 1rem;
-  font-size: clamp(1.4rem, 4vw, 2rem);
+.panel h2 { margin-top: 0; }
+.muted { color: rgba(214, 226, 255, 0.75); }
+
+.quiz-list {
+  display: grid;
+  gap: 0.7rem;
 }
+
+.quiz-card {
+  display: grid;
+  gap: 0.2rem;
+  text-align: left;
+}
+
+.quiz-card span { color: rgba(214, 226, 255, 0.8); font-size: 0.95rem; }
+
+.toggle {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+input[type='checkbox'] { transform: scale(1.1); }
 
 .options {
   display: grid;
@@ -36,19 +61,24 @@ h1 {
 }
 
 .option-btn,
-.primary-btn {
+.primary-btn,
+.ghost-btn,
+.quiz-card {
   border: 1px solid rgba(139, 168, 255, 0.25);
   border-radius: 12px;
   padding: 0.8rem 0.9rem;
   background: rgba(27, 35, 60, 0.8);
   color: #f3f6ff;
-  text-align: left;
   font-size: 1rem;
   cursor: pointer;
 }
 
+.ghost-btn { background: rgba(16, 22, 40, 0.65); }
+
 .option-btn:hover,
-.primary-btn:hover {
+.primary-btn:hover,
+.ghost-btn:hover,
+.quiz-card:hover {
   border-color: rgba(150, 198, 255, 0.55);
 }
 
@@ -62,10 +92,17 @@ h1 {
   border-color: rgba(255, 124, 146, 0.85);
 }
 
-.primary-btn {
+.row,
+.menu-actions {
+  display: flex;
+  gap: 0.7rem;
   margin-top: 1rem;
-  text-align: center;
+  flex-wrap: wrap;
 }
+
+.meta { color: rgba(220, 230, 255, 0.75); margin: 0; }
+.subtitle { color: rgba(220, 230, 255, 0.82); }
+.error { color: #ffb4c4; }
 
 .question-image {
   width: 100%;
@@ -75,6 +112,10 @@ h1 {
   border: 1px solid rgba(135, 164, 255, 0.2);
 }
 
-.error {
-  color: #ffb4c4;
+.prose pre {
+  overflow: auto;
+  border: 1px solid rgba(135, 164, 255, 0.2);
+  border-radius: 10px;
+  padding: 0.8rem;
+  background: rgba(5, 8, 16, 0.6);
 }

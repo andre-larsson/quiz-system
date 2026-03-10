@@ -1,0 +1,24 @@
+{
+  "title": "Chord Quiz (English)",
+  "version": 1,
+  "questions": [
+    {
+      "id": "c1",
+      "question": "Which notes define a C major triad?",
+      "options": ["C–E–G", "C–Eb–G", "C–F–G", "C–E–A"],
+      "correctIndex": 0
+    },
+    {
+      "id": "c2",
+      "question": "What is the interval pattern for a minor triad from root?",
+      "options": ["0, 4, 7", "0, 3, 7", "0, 3, 6", "0, 5, 7"],
+      "correctIndex": 1
+    },
+    {
+      "id": "c3",
+      "question": "Which symbol usually means a dominant seventh chord?",
+      "options": ["maj7", "m7", "7", "sus4"],
+      "correctIndex": 2
+    }
+  ]
+}
