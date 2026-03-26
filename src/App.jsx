@@ -88,10 +88,21 @@ function App() {
 
   return (
     <main className="container">
-      <section className="card arcade">
+      <section className="arcade">
+        <div className="floating-orb orb-one" aria-hidden="true" />
+        <div className="floating-orb orb-two" aria-hidden="true" />
+        <div className="floating-orb orb-three" aria-hidden="true" />
         <header className="topbar">
-          <h1>🎮 Quiz System</h1>
-          <p>Game-like, modular, and file-driven quizzes.</p>
+          <div>
+            <p className="eyebrow">Chaos mode study hall</p>
+            <h1>Quiz Circus</h1>
+            <p className="hero-copy">Bold colors, wiggly buttons, and file-driven quizzes with zero mystery in the logic.</p>
+          </div>
+          <div className="hero-badges" aria-label="Highlights">
+            <span className="badge">2 quiz packs</span>
+            <span className="badge">JSON-powered</span>
+            <span className="badge badge-accent">Arcade energy</span>
+          </div>
         </header>
 
         {error && <p className="error">{error}</p>}
@@ -142,20 +153,24 @@ function App() {
 function MenuView({ settings, onChangeSettings, onStart, onOpenHelp, onOpenFormat }) {
   return (
     <div className="menu-grid">
-      <section className="panel">
+      <section className="panel panel-feature">
+        <div className="panel-kicker">Pick your flavor</div>
         <h2>Start Menu</h2>
-        <p className="muted">Choose a quiz and launch a round.</p>
+        <p className="muted">Choose a quiz and launch a noisy little brain workout.</p>
         <div className="quiz-list">
           {QUIZ_FILES.map((q) => (
             <button key={q.id} className="quiz-card" onClick={() => onStart(q)}>
+              <span className="quiz-icon" aria-hidden="true">{q.id === 'intervals' ? '🎵' : '⚡'}</span>
               <strong>{q.name}</strong>
               <span>{q.description}</span>
+              <span className="quiz-cta">Launch this quiz</span>
             </button>
           ))}
         </div>
       </section>
 
       <section className="panel">
+        <div className="panel-kicker">Tweak the mayhem</div>
         <h2>Settings</h2>
         <label className="toggle">
           <input
@@ -184,7 +199,9 @@ function MenuView({ settings, onChangeSettings, onStart, onOpenHelp, onOpenForma
       </section>
 
       <section className="panel">
+        <div className="panel-kicker">Useful nerd stuff</div>
         <h2>Help & Info</h2>
+        <p className="muted">Read the rules, inspect the JSON shape, then get back to the confetti.</p>
         <div className="menu-actions">
           <button className="ghost-btn" onClick={onOpenHelp}>Help</button>
           <button className="ghost-btn" onClick={onOpenFormat}>Quiz format spec</button>
@@ -207,10 +224,22 @@ function PlayView({
   onNext,
   onExit
 }) {
+  const progress = ((currentIndex + 1) / questions.length) * 100
+
   return (
     <>
-      <p className="meta">{quiz.title} • Question {currentIndex + 1} / {questions.length} • Score {score}</p>
-      <h2>{currentQuestion.question}</h2>
+      <section className="play-shell">
+        <div className="status-strip">
+          <span className="status-pill">{quiz.title}</span>
+          <span className="status-pill">Question {currentIndex + 1} / {questions.length}</span>
+          <span className="status-pill status-pill-hot">Score {score}</span>
+        </div>
+        <div className="progress-track" aria-hidden="true">
+          <div className="progress-fill" style={{ width: `${progress}%` }} />
+        </div>
+      </section>
+
+      <h2 className="question-title">{currentQuestion.question}</h2>
 
       {currentQuestion.image && (
         <img className="question-image" src={currentQuestion.image} alt="Question illustration" />
@@ -252,10 +281,14 @@ function PlayView({
 
 function ResultsView({ quiz, score, total, onPlayAgain, onBackToMenu }) {
   const pct = Math.round((score / total) * 100)
+  const reaction = pct >= 80 ? 'You crushed it.' : pct >= 50 ? 'Respectable chaos.' : 'A dramatic warm-up round.'
+
   return (
-    <div className="panel">
-      <h2>{quiz.title} — Results</h2>
+    <div className="panel results-panel">
+      <div className="panel-kicker">Final tally</div>
+      <h2>{quiz.title} Results</h2>
       <p className="subtitle">You scored {score} / {total} ({pct}%).</p>
+      <p className="results-burst">{reaction}</p>
       <div className="menu-actions">
         <button className="primary-btn" onClick={onPlayAgain}>Play again</button>
         <button className="ghost-btn" onClick={onBackToMenu}>Back to menu</button>
@@ -267,6 +300,7 @@ function ResultsView({ quiz, score, total, onPlayAgain, onBackToMenu }) {
 function HelpView({ onBack }) {
   return (
     <section className="panel prose">
+      <div className="panel-kicker">How to play</div>
       <h2>Help</h2>
       <ul>
         <li>Pick a quiz from the Start Menu.</li>
@@ -282,6 +316,7 @@ function HelpView({ onBack }) {
 function FormatView({ onBack }) {
   return (
     <section className="panel prose">
+      <div className="panel-kicker">For quiz authors</div>
       <h2>Quiz format</h2>
       <p>Each quiz file is a plain JSON document:</p>
       <pre>{`{
