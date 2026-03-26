@@ -94,9 +94,8 @@ function App() {
         <div className="floating-orb orb-three" aria-hidden="true" />
         <header className="topbar">
           <div>
-            <p className="eyebrow">Chaos mode study hall</p>
-            <h1>Quiz Circus</h1>
-            <p className="hero-copy">Bold colors, wiggly buttons, and file-driven quizzes with zero mystery in the logic.</p>
+            <h1>Quiz System</h1>
+            <p className="hero-copy">A file-driven quiz app for practicing intervals, chords, and other question sets loaded from JSON.</p>
           </div>
           <div className="hero-badges" aria-label="Highlights">
             <span className="badge">2 quiz packs</span>
